@@ -33,8 +33,5 @@ jobs:
           ./docker_build.sh eval
       - name: Running the Docker Container
         run: |
-          ./docker_run.sh dev cpu
-          cd /aichallenge
-          ./build_autoware.bash
-          ./run_evaluation.bash
+          ./docker_run_ci.sh dev cpu
 
