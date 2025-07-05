@@ -1,4 +1,4 @@
-name: Run Docker Command
+name: auto-evaluation
 
 on:
   push:
