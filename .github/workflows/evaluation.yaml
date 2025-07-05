@@ -20,12 +20,10 @@ jobs:
           git clone https://github.com/novnc/noVNC.git
       - name: Start Xvfb (virtual display)
         run: |
-          export DISPLAY=:99
           Xvfb :99 -screen 0 1920x1080x24 > /dev/null 2>&1 &
-          sleep 3
+          echo "DISPLAY=:99" >> $GITHUB_ENV
       - name: Start x11vnc
         run: |
-          export DISPLAY=:99
           x11vnc -display :99 -nopw -forever -shared -bg -rfbport 5901
       - name: Start noVNC
         run: |
@@ -33,7 +31,7 @@ jobs:
           sleep 3
       - name: Checkout repository
         uses: actions/checkout@v4
-      - name: simulator 
+      - name: setup simulator 
         run: |
           cd $GITHUB_WORKSPACE/aichallenge/simulator
           curl -L -o AWSIM.zip "https://github.com/booars/aichallenge-2025-sim/raw/main/AWSIM.zip"
@@ -51,11 +49,6 @@ jobs:
           cd $GITHUB_WORKSPACE
           ./create_submit_file.bash
           ./docker_build.sh eval
-      - name: docker images
-        run: |
-          docker images
-      #- name: Setup tmate session
-      #   uses: mxschmitt/action-tmate@v3
       - name: Running the Docker Container
         run: |
           ./docker_run.sh eval
