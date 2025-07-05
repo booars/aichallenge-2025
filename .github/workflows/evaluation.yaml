@@ -34,6 +34,8 @@ jobs:
         run: |
           ./noVNC/utils/novnc_proxy --vnc localhost:5901 --listen 6080 &
           sleep 3
+      - name: Install xhost
+        run: sudo apt-get install -y x11-xserver-utils
       - name: Checkout repository
         uses: actions/checkout@v4
       - name: setup simulator 
