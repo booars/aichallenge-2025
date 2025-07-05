@@ -56,5 +56,5 @@ jobs:
           ./docker_build.sh eval
       - name: Running the Docker Container
         run: |
-          xhost+
+          xhost +
           ./docker_run.sh eval
