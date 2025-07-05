@@ -55,5 +55,4 @@ jobs:
           docker images
       - name: Running the Docker Container
         run: |
-          ./docker_run.sh dev cpu
-          ./docker_exec_ci.sh
+          ./docker_run.sh dev cpu && ./docker_exec_ci.sh
