@@ -38,4 +38,4 @@ echo "A rocker run log is stored at : file://$LOG_FILE"
 
 # shellcheck disable=SC2086
 rocker ${opts} --x11 --devices /dev/dri --user --net host --privileged --name "aichallenge-2025-$(date "+%Y-%m-%d-%H-%M-%S")" --volume ${volume} -- "aichallenge-2025-${target}-${USER}" \
-    /bin/bash -c "cd /aichallenge && ./build_autoware.bash && ./run_evaluation.bash"
+    /bin/bash -c "cd /aichallenge && ./build_autoware.bash && ./run_evaluation_ci.bash"
