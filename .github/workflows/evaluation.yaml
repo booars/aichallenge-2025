@@ -49,6 +49,7 @@ jobs:
       - name: Building the Docker Image
         run: |
           cd $GITHUB_WORKSPACE
+          ./create_submit_file.bash
           ./docker_build.sh eval
       - name: docker images
         run: |
@@ -57,4 +58,4 @@ jobs:
       #   uses: mxschmitt/action-tmate@v3
       - name: Running the Docker Container
         run: |
-          ./docker_run_ci.sh
+          ./docker_run.sh eval
