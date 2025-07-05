@@ -29,7 +29,7 @@ if [ "$CONTAINER_COUNT" -eq 1 ]; then
     CONTAINER_NAME=$(docker ps --format "{{.Names}}")
     echo "Only one container running: $CONTAINER_NAME"
     echo "Automatically connecting to this container..."
-    docker exec -it "$SELECTED_CONTAINER" bash -c "cd /aichallenge && ./build_autoware.bash && ./run_evaluation_ci.bash"
+    docker exec -it "$SELECTED_CONTAINER" bash -c "cd /aichallenge && ./build_autoware.bash && ./run_evaluation.bash"
     exit 0
 fi
 
