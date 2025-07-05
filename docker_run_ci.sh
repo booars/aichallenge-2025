@@ -1,5 +1,5 @@
 #!/bin/bash
-
+GITHUB_WORKSPACE=$(pwd)
 docker run --rm \
   --name aichallenge-2025 \
   --network host \
@@ -10,4 +10,4 @@ docker run --rm \
   -v ${GITHUB_WORKSPACE}/vehicle:/vehicle \
   -e DISPLAY -e TERM \
   "aichallenge-2025-dev-${USER}" \
-  bash -c "cd /aichallenge && ./build_autoware.bash && ./run_evaluation.bash"
+  bash -c "cd /aichallenge && ./build_autoware.bash && source /aichallenge/workspace/install/setup.bash && ./run_evaluation.bash"
