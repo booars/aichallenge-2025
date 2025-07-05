@@ -1,0 +1,40 @@
+name: Run Docker Command
+
+on:
+  push:
+    branches: [ main, feat/add-auto-evaluation ]
+  pull_request:
+    branches: [ main, feat/add-auto-evaluation ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      - name: simulator 
+        run: |
+          cd $GITHUB_WORKSPACE/aichallenge/simulator
+          curl -L -o AWSIM.zip "https://github.com/booars/aichallenge-2025-sim/raw/main/AWSIM.zip"
+          unzip AWSIM.zip
+          chmod +x ./AWSIM/AWSIM.x86_64
+      - name: Installing Dependencies
+        run: |
+          sudo apt update
+          sudo apt install -y python3-pip ca-certificates curl gnupg
+          pip install rocker
+          echo export PATH='$HOME/.local/bin:$PATH' >> ~/.bashrc
+          source ~/.bashrc
+      - name: Building the Docker Image
+        run: |
+          cd $GITHUB_WORKSPACE
+          ./docker_build.sh eval
+      - name: Running the Docker Container
+        run: |
+          ./docker_run.sh dev cpu
+          cd /aichallenge
+          ./build_autoware.bash
+          ./run_evaluation.bash
+
