@@ -49,7 +49,7 @@ jobs:
       - name: Building the Docker Image
         run: |
           cd $GITHUB_WORKSPACE
-          ./docker_build.sh dev
+          ./docker_build.sh eval
       - name: docker images
         run: |
           docker images
