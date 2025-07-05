@@ -1,5 +1,5 @@
 #!/bin/bash
-GITHUB_WORKSPACE=$(pwd)
+#GITHUB_WORKSPACE=$(pwd)
 docker run --rm \
   --name aichallenge-2025 \
   --network host \
