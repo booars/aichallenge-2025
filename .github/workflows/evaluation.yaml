@@ -27,9 +27,14 @@ jobs:
           pip install rocker
           echo export PATH='$HOME/.local/bin:$PATH' >> ~/.bashrc
           source ~/.bashrc
-      - name: Building and Running the Docker Container
+      - name: Building the Docker Image
         run: |
           cd $GITHUB_WORKSPACE
-          ./docker_build.sh eval
+          ./docker_build.sh dev
+      - name: docker images
+        run: |
+          docker images
+      - name: Running the Docker Container
+        run: |
           ./docker_run_ci.sh dev cpu
 
