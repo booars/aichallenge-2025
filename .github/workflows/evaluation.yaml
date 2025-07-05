@@ -56,4 +56,7 @@ jobs:
       - name: Running the Docker Container
         run: |
           ./docker_run_ci.sh dev cpu
+      - name: Display docker run logs
+        run: |
+          cat $GITHUB_WORKSPACE/output/latest/docker_run.log
 
