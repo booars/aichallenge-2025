@@ -56,6 +56,4 @@ jobs:
       - name: Running the Docker Container
         run: |
           ./docker_run_ci.sh dev cpu
-      - name: Exec the Docker Container
-        run: |
           ./docker_exec_ci.sh
