@@ -54,7 +54,7 @@ jobs:
         run: |
           docker images
       - name: Setup tmate session
-        uses: mxschmitt/action-tmate@v3
-      - name: Running the Docker Container
+      #   uses: mxschmitt/action-tmate@v3
+      # - name: Running the Docker Container
         run: |
           ./docker_run_ci.sh
