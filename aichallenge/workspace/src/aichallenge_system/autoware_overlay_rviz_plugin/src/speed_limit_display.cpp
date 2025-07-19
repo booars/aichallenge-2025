@@ -72,7 +72,7 @@ void SpeedLimitDisplay::updateSpeedData(
 void SpeedLimitDisplay::drawSpeedLimitIndicator(
   QPainter & painter, const QRectF & backgroundRect, const QColor & color,
   const QColor & light_color, const QColor & dark_color, const QColor & bg_color,
-  const float bg_alpha)
+  [[maybe_unused]] const float bg_alpha)
 {
   // Enable Antialiasing for smoother drawing
   painter.setRenderHint(QPainter::Antialiasing, true);
