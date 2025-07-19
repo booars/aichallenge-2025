@@ -30,7 +30,7 @@ class CSVToTrajectory : public rclcpp::Node
 public:
   CSVToTrajectory() : Node("csv_to_trajectory_node")
   {
-    const auto rb_qos = rclcpp::QoS(rclcpp::KeepLast(1)).durability_volatile().best_effort();
+    const auto rb_qos = rclcpp::QoS(rclcpp::KeepLast(1)).durability_volatile();
     pub_ = this->create_publisher<Trajectory>("trajectory", rb_qos);
     set_parameter_callback_handle_ = this->add_on_set_parameters_callback(
       std::bind(&CSVToTrajectory::on_parameter_event, this, std::placeholders::_1));
