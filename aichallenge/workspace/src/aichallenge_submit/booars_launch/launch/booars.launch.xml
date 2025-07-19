@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<launch>
+
+  <arg name="launch_control" default="true"/>
+
+
+  <group if="$(var launch_control)">
+    <include file="$(find-pkg-share booars_launch)/launch/components/control.launch.xml" />
+  </group>
+
+</launch>

@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<launch>
+  <group>
+    <push-ros-namespace namespace="control"/>
+    <group>
+      <push-ros-namespace namespace="trajectory_follower"/>
+        <arg name="enable_obstacle_collision_checker" default="false"/>
+        <arg name="enable_autonomous_emergency_braking" default="false"/>
+        <arg name="check_external_emergency_heartbeat" default="false"/>
+  
+        <arg name="nearest_search_param_path" default="$(find-pkg-share booars_launch)/config/control/common/nearest_search.param.yaml"/>
+        <arg name="trajectory_follower_node_param_path" default="$(find-pkg-share booars_launch)/config/control/trajectory_follower/trajectory_follower_node.param.yaml"/>
+        <arg name="lon_controller_param_path" default="$(find-pkg-share booars_launch)/config/control/trajectory_follower/lateral/mpc.param.yaml"/>
+        <arg name="lat_controller_param_path" default="$(find-pkg-share booars_launch)/config/control/trajectory_follower/longitudinal/pid.param.yaml"/>
+        <arg name="vehicle_param_file" default="$(find-pkg-share racing_kart_description)/config/vehicle_info.param.yaml"/>
+        
+        <node pkg="trajectory_follower_node" exec="controller_node_exe" name="controller" output="screen">
+
+          <remap from="~/input/reference_trajectory" to="/planning/scenario_planning/trajectory"/>
+          <remap from="~/input/current_odometry" to="/localization/kinematic_state"/>
+          <remap from="~/input/current_steering" to="/vehicle/status/steering_status"/>
+          <remap from="~/input/current_accel" to="/localization/acceleration"/>
+          <remap from="~/input/current_operation_mode" to="/system/operation_mode/state"/>
+          <remap from="~/output/predicted_trajectory" to="lateral/predicted_trajectory"/>
+          <remap from="~/output/lateral_diagnostic" to="lateral/diagnostic"/>
+          <remap from="~/output/slope_angle" to="longitudinal/slope_angle"/>
+          <remap from="~/output/longitudinal_diagnostic" to="longitudinal/diagnostic"/>
+          <remap from="~/output/stop_reason" to="longitudinal/stop_reason"/>
+          <remap from="~/output/control_cmd" to="/awsim/control_cmd"/>
+          <param name="trajectory_follower_mode" value="trajectory_follower_node"/>
+          <param name="lateral_controller_mode" value="mpc"/>
+          <param name="longitudinal_controller_mode" value="pid"/>
+          <param from="$(var nearest_search_param_path)"/>
+          <param from="$(var trajectory_follower_node_param_path)"/>
+          <param from="$(var lon_controller_param_path)"/>
+          <param from="$(var lat_controller_param_path)"/>
+          <param from="$(var vehicle_param_file)"/>
+        </node>
+      </group>
+
+  </group> 
+</launch>
