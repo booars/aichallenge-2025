@@ -23,7 +23,10 @@ SimplePurePursuit::SimplePurePursuit()
   speed_proportional_gain_(declare_parameter<float>("speed_proportional_gain", 1.0)),
   use_external_target_vel_(declare_parameter<bool>("use_external_target_vel", false)),
   external_target_vel_(declare_parameter<float>("external_target_vel", 0.0)),
-  steering_tire_angle_gain_(declare_parameter<float>("steering_tire_angle_gain", 1.0))
+  steering_tire_angle_gain_(declare_parameter<float>("steering_tire_angle_gain", 1.0)),
+  start_boost_distance_(declare_parameter<double>("start_boost_distance", 0.0)),
+  start_boost_speed_(declare_parameter<double>("start_boost_speed", 0.0)),
+  start_boost_acceleration_(declare_parameter<double>("start_boost_acceleration", 0.0))
 {
   pub_cmd_ = create_publisher<AckermannControlCommand>("output/control_cmd", 1);
   pub_raw_cmd_ = create_publisher<AckermannControlCommand>("output/raw_control_cmd", 1);
@@ -119,6 +122,11 @@ void SimplePurePursuit::onTimer()
     cmd.lateral.steering_tire_angle =
       steering_tire_angle_gain_ * std::atan2(2.0 * wheel_base_ * std::sin(alpha), lookahead_distance);
   }
+  if(calculateOdomDistance() < start_boost_distance_){
+    cmd.longitudinal.speed = start_boost_speed_;
+    cmd.longitudinal.acceleration = start_boost_acceleration_;
+    cmd.lateral.steering_tire_angle = 0.0;
+  }
   pub_cmd_->publish(cmd);
   cmd.lateral.steering_tire_angle /=  steering_tire_angle_gain_;
   pub_raw_cmd_->publish(cmd);
@@ -139,6 +147,29 @@ bool SimplePurePursuit::subscribeMessageAvailable()
       return false;
     }
   return true;
+}
+
+double SimplePurePursuit::calculateOdomDistance() {
+  static double prev_x = 0.0;
+  static double prev_y = 0.0;
+  static bool is_first = true;
+  static double total_distance = 0.0;
+
+  double x = odometry_->pose.pose.position.x;
+  double y = odometry_->pose.pose.position.y;
+
+  if (is_first) {
+    prev_x = x;
+    prev_y = y;
+    is_first = false;
+    return 0.0;
+  }
+
+  double dist = std::hypot(x - prev_x, y - prev_y);
+  total_distance += dist;
+  prev_x = x;
+  prev_y = y;
+  return total_distance;
 }
 }  // namespace simple_pure_pursuit
 
