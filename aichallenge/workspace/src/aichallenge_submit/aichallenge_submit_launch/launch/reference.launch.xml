@@ -109,37 +109,42 @@
   </group>
 
   <!-- Planning -->
-  <group>
-    <push-ros-namespace namespace="planning"/>
-
-    <!-- scenario_planning -->
-    <group>
-      <push-ros-namespace namespace="scenario_planning"/>
-
-      <!-- Customizable -->
-      <node pkg="simple_trajectory_generator" exec="simple_trajectory_generator_node" name="simple_trajectory_generator" output="screen">
-            <param name="csv_path" value="$(find-pkg-share simple_trajectory_generator)/data/raceline_awsim_30km_from_garage.csv"/>
-            <param name="z" value="6.5"/>
-      </node>
-      
-    </group>
-  </group>
+  <!-- オフライン最適化した経路から車両周辺の経路を抜き出して与えるノード -->
+  <node pkg="path_to_trajectory" exec="csv_to_trajectory_node" name="csv_to_trajectory" output="screen">
+    <!-- <param name="csv_file_path" value="$(find-pkg-share aichallenge_submit_launch)/map/csv/traj_race_cl.csv"/> -->
+    <param name="csv_file_path" value="$(find-pkg-share aichallenge_submit_launch)/map/csv/optimized_trajectory.csv"/>
+    <!-- csvから読み込んだ速度に掛ける係数 -->
+    <param name="velocity_coef" value="1.0"/>
+    <!-- 車両前方のtrajectoryの長さ -->
+    <param name="trajectory_length" value="150.0"/>
+    <!-- 車両後方のtrajectoryの長さ -->
+    <param name="trajectory_rear_length" value="20.0"/>
+    <!-- trajectoryの間隔 -->
+    <param name="trajectory_margin" value="2.0"/>
+    <!-- pose.position.zの値 -->
+    <param name="z_position" value="6.2"/>
+    <remap from="output" to="/planning/scenario_planning/trajectory"/>
+    <remap from="in_odom" to="/localization/kinematic_state"/>
+  </node>
 
   <!-- Pure Pursuit -->
-  <let name="steering_tire_angle_gain_var" value="1.50" if="$(var simulation)"/>
+  <let name="steering_tire_angle_gain_var" value="1.3" if="$(var simulation)"/>
   <let name="steering_tire_angle_gain_var" value="1.639" unless="$(var simulation)"/>
 
   <node pkg="simple_pure_pursuit" exec="simple_pure_pursuit" name="simple_pure_pursuit_node" output="screen">
     <param name="use_external_target_vel" value="false"/>
     <param name="external_target_vel" value="10.0"/>
-    <param name="lookahead_gain" value="0.5"/>
-    <param name="lookahead_min_distance" value="3.5"/>
-    <param name="speed_proportional_gain" value="1.0"/>
+    <param name="lookahead_gain" value="0.4"/>
+    <param name="lookahead_min_distance" value="1.5"/>
+    <param name="speed_proportional_gain" value="10.0"/>
     <param name="steering_tire_angle_gain" value="$(var steering_tire_angle_gain_var)"/>
+    <param name="start_boost_distance" value="35.0"/>
+    <param name="start_boost_speed" value="40.0"/>
+    <param name="start_boost_acceleration" value="20.0"/>
 
     <remap from="input/kinematics" to="/localization/kinematic_state"/>
     <remap from="input/trajectory" to="/planning/scenario_planning/trajectory"/>
-    <remap from="output/control_cmd" to="/control/command/control_cmd"/>
+    <remap from="output/control_cmd" to="/awsim/control_cmd"/>
   </node>
 
   <!-- Map -->
