@@ -50,9 +50,12 @@ private:
   int now_index_ = 0;
   float z_position_ = 0.0f;
   bool enable_additional_trajectory_ = false;  // 追加経路の有効化フラグ
+  double start_trajectory_distance_ = 0.0;
 
   pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_;
   pcl::KdTreeFLANN<pcl::PointXYZ> kdtree_;
+  pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_merged_;
+  pcl::KdTreeFLANN<pcl::PointXYZ> kdtree_merged_;
 
   void odomCallback(const nav_msgs::msg::Odometry::SharedPtr odometry);
   void readCsv(const std::string& csv_file_path);

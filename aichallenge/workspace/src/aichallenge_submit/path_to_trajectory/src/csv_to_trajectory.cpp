@@ -29,6 +29,7 @@ CsvToTrajectory::CsvToTrajectory() : Node("csv_to_trajectory_node")
   this->declare_parameter<float>("trajectory_margin", 2.0f);
   this->declare_parameter<float>("trajectory_rear_length", 10.0f);
   this->declare_parameter<float>("z_position", 0.0f);
+  this->declare_parameter<double>("start_trajectory_distance", 100.0);
 
   std::string csv_file_path;
   std::string additional_csv_file_path;
@@ -37,6 +38,7 @@ CsvToTrajectory::CsvToTrajectory() : Node("csv_to_trajectory_node")
   this->get_parameter("enable_additional_trajectory", this->enable_additional_trajectory_);
   this->get_parameter("trajectory_length", this->trajectory_length_);
   this->get_parameter("z_position", this->z_position_);
+  this->get_parameter("start_trajectory_distance", this->start_trajectory_distance_);
   dynamicLoadParam();
 
   if (csv_file_path.empty()) {
@@ -171,19 +173,32 @@ void CsvToTrajectory::mergeTrajectories() {
   trajectory_points_ = merged_trajectory;
   
   // ポイントクラウドを再構築
-  cloud_->points.clear();
+  cloud_merged_->points.clear();
   for (const auto& point : trajectory_points_) {
-    cloud_->points.push_back(pcl::PointXYZ(point.pose.position.x, point.pose.position.y, z_position_));
+    cloud_merged_->points.push_back(pcl::PointXYZ(point.pose.position.x, point.pose.position.y, z_position_));
   }
   
   // KDTreeを再構築
-  kdtree_.setInputCloud(cloud_);
-  
+  kdtree_merged_.setInputCloud(cloud_merged_);
+
   RCLCPP_INFO(this->get_logger(), "Merged trajectories: total %zu points", trajectory_points_.size());
 }
 
 void CsvToTrajectory::odomCallback(const nav_msgs::msg::Odometry::SharedPtr odometry)
 {
+  // odometryの走行距離を記録
+  static double last_x = odometry->pose.pose.position.x;
+  static double last_y = odometry->pose.pose.position.y;
+  static double odom_distance = 0.0;
+
+  double current_x = odometry->pose.pose.position.x;
+  double current_y = odometry->pose.pose.position.y;
+  double dx = current_x - last_x;
+  double dy = current_y - last_y;
+  odom_distance += std::sqrt(dx * dx + dy * dy);
+
+  last_x = current_x;
+  last_y = current_y;
   if (current_point_index_ >= trajectory_points_.size()) return;
 
   dynamicLoadParam();
@@ -196,17 +211,13 @@ void CsvToTrajectory::odomCallback(const nav_msgs::msg::Odometry::SharedPtr odom
   std::vector<int> pointIdxNKNSearch(K);
   std::vector<float> pointNKNSquaredDistance(K);
   pcl::PointXYZ searchPoint(odometry->pose.pose.position.x, odometry->pose.pose.position.y, z_position_);
+  //if(start_trajectory_distance_  > odom_distance && enable_additional_trajectory_){
+    kdtree_merged_.nearestKSearch(searchPoint, K, pointIdxNKNSearch, pointNKNSquaredDistance);
+  // }
+  // else{
+  //   kdtree_.nearestKSearch(searchPoint, K, pointIdxNKNSearch, pointNKNSquaredDistance);
+  // }
 
-  if (kdtree_.nearestKSearch(searchPoint, K, pointIdxNKNSearch, pointNKNSquaredDistance) > 0)
-  {
-      // std::cout << "The closest point index: " << pointIdxNKNSearch[0] << std::endl;
-      // std::cout << "Distance: " << pointNKNSquaredDistance[0] << std::endl;
-  }
-  else
-  {
-      // std::cout << "No neighbors found!" << std::endl;
-      return;
-  }
   int start_index = pointIdxNKNSearch[0]- std::round(trajectory_rear_length_/trajectory_margin_);
   if(start_index<0){
     start_index+=trajectory_points_.size();
