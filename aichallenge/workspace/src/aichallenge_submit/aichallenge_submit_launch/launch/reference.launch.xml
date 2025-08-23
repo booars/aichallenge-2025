@@ -109,10 +109,14 @@
   </group>
 
   <!-- Planning -->
+  <!-- Customizable -->
   <!-- オフライン最適化した経路から車両周辺の経路を抜き出して与えるノード -->
   <node pkg="path_to_trajectory" exec="csv_to_trajectory_node" name="csv_to_trajectory" output="screen">
-    <!-- <param name="csv_file_path" value="$(find-pkg-share aichallenge_submit_launch)/map/csv/traj_race_cl.csv"/> -->
     <param name="csv_file_path" value="$(find-pkg-share aichallenge_submit_launch)/map/csv/optimized_trajectory.csv"/>
+    <!-- 追加のCSVファイルパス（最初の経路情報） -->
+    <param name="additional_csv_file_path" value="$(find-pkg-share aichallenge_submit_launch)/map/csv/first_trajectory.csv"/>
+    <!-- 追加経路の有効化フラグ -->
+    <param name="enable_additional_trajectory" value="true"/>
     <!-- csvから読み込んだ速度に掛ける係数 -->
     <param name="velocity_coef" value="1.0"/>
     <!-- 車両前方のtrajectoryの長さ -->
@@ -128,7 +132,7 @@
   </node>
 
   <!-- Pure Pursuit -->
-  <let name="steering_tire_angle_gain_var" value="1.3" if="$(var simulation)"/>
+  <let name="steering_tire_angle_gain_var" value="1.55" if="$(var simulation)"/>
   <let name="steering_tire_angle_gain_var" value="1.639" unless="$(var simulation)"/>
 
   <node pkg="simple_pure_pursuit" exec="simple_pure_pursuit" name="simple_pure_pursuit_node" output="screen">
@@ -138,6 +142,7 @@
     <param name="lookahead_min_distance" value="1.5"/>
     <param name="speed_proportional_gain" value="10.0"/>
     <param name="steering_tire_angle_gain" value="$(var steering_tire_angle_gain_var)"/>
+    <param name="enable_start_boost" value="false"/>
     <param name="start_boost_distance" value="35.0"/>
     <param name="start_boost_speed" value="40.0"/>
     <param name="start_boost_acceleration" value="20.0"/>

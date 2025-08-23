@@ -41,6 +41,7 @@ private:
   rclcpp::Publisher<Trajectory>::SharedPtr pub_;
   rclcpp::Publisher<std_msgs::msg::Int32>::SharedPtr pub_now_point_;
   std::vector<TrajectoryPoint> trajectory_points_;
+  std::vector<TrajectoryPoint> additional_trajectory_points_;  // 追加の経路情報
   size_t current_point_index_ = 0;
   float velocity_coef_ = 1.0f;
   float trajectory_length_ = 200.0f;
@@ -48,13 +49,15 @@ private:
   float trajectory_rear_length_ = 30.0f;
   int now_index_ = 0;
   float z_position_ = 0.0f;
+  bool enable_additional_trajectory_ = false;  // 追加経路の有効化フラグ
 
   pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_;
   pcl::KdTreeFLANN<pcl::PointXYZ> kdtree_;
 
-
   void odomCallback(const nav_msgs::msg::Odometry::SharedPtr odometry);
   void readCsv(const std::string& csv_file_path);
+  void readAdditionalCsv(const std::string& csv_file_path);  // 追加CSV読み込み
+  void mergeTrajectories();  // 経路情報のマージ
   void dynamicLoadParam();
 };
 

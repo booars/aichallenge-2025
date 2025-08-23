@@ -53,6 +53,7 @@ class SimplePurePursuit : public rclcpp::Node {
   double start_boost_distance_;
   double start_boost_speed_;
   double start_boost_acceleration_;
+  const bool enable_start_boost_;  // boost処理のON/OFF切り替えフラグ
  private:
   void onTimer();
   bool subscribeMessageAvailable();

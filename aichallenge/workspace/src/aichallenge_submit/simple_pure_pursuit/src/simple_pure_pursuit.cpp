@@ -26,7 +26,8 @@ SimplePurePursuit::SimplePurePursuit()
   steering_tire_angle_gain_(declare_parameter<float>("steering_tire_angle_gain", 1.0)),
   start_boost_distance_(declare_parameter<double>("start_boost_distance", 0.0)),
   start_boost_speed_(declare_parameter<double>("start_boost_speed", 0.0)),
-  start_boost_acceleration_(declare_parameter<double>("start_boost_acceleration", 0.0))
+  start_boost_acceleration_(declare_parameter<double>("start_boost_acceleration", 0.0)),
+  enable_start_boost_(declare_parameter<bool>("enable_start_boost", false))
 {
   pub_cmd_ = create_publisher<AckermannControlCommand>("output/control_cmd", 1);
   pub_raw_cmd_ = create_publisher<AckermannControlCommand>("output/raw_control_cmd", 1);
@@ -123,7 +124,7 @@ void SimplePurePursuit::onTimer()
     cmd.lateral.steering_tire_angle =
       steering_tire_angle_gain_ * std::atan2(2.0 * wheel_base_ * std::sin(alpha), lookahead_distance);
   }
-  if(calculateOdomDistance() < start_boost_distance_){
+  if(enable_start_boost_ && calculateOdomDistance() < start_boost_distance_){
     cmd.longitudinal.speed = start_boost_speed_;
     cmd.longitudinal.acceleration = start_boost_acceleration_;
     cmd.lateral.steering_tire_angle = 0.0;
