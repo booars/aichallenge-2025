@@ -22,6 +22,8 @@ CsvToTrajectory::CsvToTrajectory() : Node("csv_to_trajectory_node")
  {
   using std::placeholders::_1;
   this->declare_parameter<std::string>("csv_file_path", "");
+  this->declare_parameter<std::string>("additional_csv_file_path", "");  // 追加のCSVファイルパス
+  this->declare_parameter<bool>("enable_additional_trajectory", false);  // 追加経路の有効化フラグ
   this->declare_parameter<float>("velocity_coef", 30.0f);
   this->declare_parameter<float>("trajectory_length", 100.0f);
   this->declare_parameter<float>("trajectory_margin", 2.0f);
@@ -29,7 +31,10 @@ CsvToTrajectory::CsvToTrajectory() : Node("csv_to_trajectory_node")
   this->declare_parameter<float>("z_position", 0.0f);
 
   std::string csv_file_path;
+  std::string additional_csv_file_path;
   this->get_parameter("csv_file_path", csv_file_path);
+  this->get_parameter("additional_csv_file_path", additional_csv_file_path);
+  this->get_parameter("enable_additional_trajectory", this->enable_additional_trajectory_);
   this->get_parameter("trajectory_length", this->trajectory_length_);
   this->get_parameter("z_position", this->z_position_);
   dynamicLoadParam();
@@ -44,8 +49,15 @@ CsvToTrajectory::CsvToTrajectory() : Node("csv_to_trajectory_node")
       "in_odom", qos, std::bind(&CsvToTrajectory::odomCallback, this, _1));
   this->pub_ = this->create_publisher<Trajectory>("output", 1);
   this->pub_now_point_ = this->create_publisher<std_msgs::msg::Int32>("now_waypoint", 1);
+  
+  // メインのCSVファイルを読み込み
   this->readCsv(csv_file_path);
-
+  
+  // 追加のCSVファイルが指定されている場合は読み込み
+  if (this->enable_additional_trajectory_ && !additional_csv_file_path.empty()) {
+    this->readAdditionalCsv(additional_csv_file_path);
+    this->mergeTrajectories();
+  }
 }
 
 void CsvToTrajectory::dynamicLoadParam(){
@@ -96,6 +108,78 @@ void CsvToTrajectory::readCsv(const std::string& file_path) {
 
   kdtree_.setInputCloud(cloud_);
   
+}
+
+void CsvToTrajectory::readAdditionalCsv(const std::string& file_path) {
+  std::ifstream file(file_path);
+  std::string line;
+  double old_x = 0.0;
+  double old_y = 0.0;
+  
+  if (!file.is_open()) {
+    RCLCPP_ERROR(this->get_logger(), "Failed to open additional CSV file: %s", file_path.c_str());
+    return;
+  }
+  
+  while (std::getline(file, line)) {
+    if (line.empty() || line[0] == '#' || line[0] == 'x') continue; // Skip empty lines and comments
+    std::istringstream s(line);
+    std::string field;
+    std::vector<double> values;
+
+    while (getline(s, field, ',')) {
+      values.push_back(std::stod(field));
+    }
+    
+    // x,y,z,yaw
+    TrajectoryPoint point;
+    point.pose.position.x = values[1];
+    point.pose.position.y = values[2];
+    point.pose.position.z = z_position_;
+    const double yaw = values[3] + M_PI/2;
+    point.pose.orientation.x = 0.0;
+    point.pose.orientation.y = 0.0;
+    point.pose.orientation.z = sin(yaw / 2);
+    point.pose.orientation.w = cos(yaw / 2);
+    point.longitudinal_velocity_mps = values[5];
+    point.acceleration_mps2 = 0.0; //values[6];
+
+    additional_trajectory_points_.push_back(point);
+    old_x = point.pose.position.x;
+    old_y = point.pose.position.y;
+  }
+  
+  RCLCPP_INFO(this->get_logger(), "Loaded %zu additional trajectory points", additional_trajectory_points_.size());
+}
+
+void CsvToTrajectory::mergeTrajectories() {
+  if (additional_trajectory_points_.empty()) {
+    RCLCPP_WARN(this->get_logger(), "No additional trajectory points to merge");
+    return;
+  }
+  
+  // メインの経路情報の前に追加の経路情報を挿入
+  std::vector<TrajectoryPoint> merged_trajectory;
+  
+  // 追加の経路情報を先頭に追加
+  merged_trajectory.insert(merged_trajectory.end(), additional_trajectory_points_.begin(), additional_trajectory_points_.end());
+  
+  // メインの経路情報を追加
+  merged_trajectory.insert(merged_trajectory.end(), trajectory_points_.begin(), trajectory_points_.end());
+  
+  // マージされた経路情報で置き換え
+  trajectory_points_ = merged_trajectory;
+  
+  // ポイントクラウドを再構築
+  cloud_->points.clear();
+  for (const auto& point : trajectory_points_) {
+    cloud_->points.push_back(pcl::PointXYZ(point.pose.position.x, point.pose.position.y, z_position_));
+  }
+  
+  // KDTreeを再構築
+  kdtree_.setInputCloud(cloud_);
+  
+  RCLCPP_INFO(this->get_logger(), "Merged trajectories: total %zu points", trajectory_points_.size());
 }
 
 void CsvToTrajectory::odomCallback(const nav_msgs::msg::Odometry::SharedPtr odometry)
