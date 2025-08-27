@@ -1,0 +1,62 @@
+name: auto-evaluation
+
+on:
+  push:
+    branches: [ main, feat/add-auto-evaluation ]
+  pull_request:
+    branches: [ main, feat/add-auto-evaluation ]
+  workflow_dispatch:
+
+jobs:
+  auto-evaluation:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Install Xvfb, noVNC, websockify
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y xvfb x11vnc git python3-pip
+          pip install websockify
+          git clone https://github.com/novnc/noVNC.git
+      - name: Start Xvfb (virtual display)
+        run: |
+          Xvfb :99 -screen 0 1920x1080x24 > /dev/null 2>&1 &
+          echo "DISPLAY=:99" >> $GITHUB_ENV
+      - name: Install window manager
+        run: sudo apt-get install -y openbox
+      - name: Start window manager
+        run: |
+          openbox > /dev/null 2>&1 &
+      - name: Start x11vnc
+        run: |
+          x11vnc -display :99 -nopw -forever -shared -bg -rfbport 5901
+      - name: Start noVNC
+        run: |
+          ./noVNC/utils/novnc_proxy --vnc localhost:5901 --listen 6080 &
+          sleep 3
+      - name: Install xhost
+        run: sudo apt-get install -y x11-xserver-utils
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      - name: setup simulator 
+        run: |
+          cd $GITHUB_WORKSPACE/aichallenge/simulator
+          curl -L -o AWSIM.zip "https://github.com/booars/aichallenge-2025-sim/raw/main/AWSIM.zip"
+          unzip AWSIM.zip
+          chmod +x ./AWSIM/AWSIM.x86_64
+      - name: Installing Dependencies
+        run: |
+          sudo apt update
+          sudo apt install -y python3-pip ca-certificates curl gnupg
+          pip install rocker
+          echo export PATH='$HOME/.local/bin:$PATH' >> ~/.bashrc
+          source ~/.bashrc
+      - name: Building the Docker Image
+        run: |
+          cd $GITHUB_WORKSPACE
+          ./create_submit_file.bash
+          ./docker_build.sh eval
+      - name: Running the Docker Container
+        run: |
+          xhost +
+          ./docker_run.sh eval
