@@ -41,8 +41,6 @@ class SimplePurePursuit : public rclcpp::Node {
   Trajectory::SharedPtr trajectory_;
   Odometry::SharedPtr odometry_;
 
-
-
   // pure pursuit parameters
   const double wheel_base_;
   const double lookahead_gain_;
@@ -52,10 +50,15 @@ class SimplePurePursuit : public rclcpp::Node {
   const double external_target_vel_;
   const double steering_tire_angle_gain_;
 
-
+  double start_boost_distance_;
+  double start_boost_speed_;
+  double start_boost_acceleration_;
+  const bool enable_start_boost_;  // boost処理のON/OFF切り替えフラグ
  private:
   void onTimer();
   bool subscribeMessageAvailable();
+  // 走行距離計算
+  double calculateOdomDistance();
 };
 
 }  // namespace simple_pure_pursuit
