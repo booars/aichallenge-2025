@@ -6,3 +6,7 @@ ecos
 pandas
 plotly
 kaleido
+osqp
+scikit-image
+PyYAML
+tomli==2.3.0

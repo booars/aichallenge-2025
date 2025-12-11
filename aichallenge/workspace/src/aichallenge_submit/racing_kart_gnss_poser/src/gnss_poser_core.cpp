@@ -31,6 +31,7 @@ GNSSPoser::GNSSPoser(const rclcpp::NodeOptions & node_options)
   gnss_frame_(declare_parameter("gnss_frame", "gnss")),
   gnss_base_frame_(declare_parameter("gnss_base_frame", "gnss_base_link")),
   map_frame_(declare_parameter("map_frame", "map")),
+  gear_('N'),
   use_gnss_ins_orientation_(declare_parameter("use_gnss_ins_orientation", true)),
   plane_zone_(declare_parameter<int>("plane_zone", 9)),
   gnss_change_threshold_(declare_parameter<double>("gnss_change_threshold")),
@@ -65,11 +66,11 @@ GNSSPoser::GNSSPoser(const rclcpp::NodeOptions & node_options)
     [this](const autoware_auto_vehicle_msgs::msg::GearReport::SharedPtr msg)
     {
       if (msg->report == autoware_auto_vehicle_msgs::msg::GearReport::DRIVE)
-        gear_ = 'R';
+        gear_ = 'D';
       else if (msg->report == autoware_auto_vehicle_msgs::msg::GearReport::NONE)
         gear_ = 'N';
       else if (msg->report == autoware_auto_vehicle_msgs::msg::GearReport::REVERSE)
-        gear_ = 'D';
+        gear_ = 'R';
     });
 }
 
@@ -315,9 +316,9 @@ bool GNSSPoser::getTransform(
       tf2_buffer_.lookupTransform(target_frame, source_frame, tf2::TimePointZero);
   } catch (tf2::TransformException & ex) {
     RCLCPP_WARN_STREAM_THROTTLE(
-      this->get_logger(), *this->get_clock(), std::chrono::milliseconds(1000).count(), ex.what());
+      this->get_logger(), *this->get_clock(), std::chrono::milliseconds(5000).count(), ex.what());
     RCLCPP_WARN_STREAM_THROTTLE(
-      this->get_logger(), *this->get_clock(), std::chrono::milliseconds(1000).count(),
+      this->get_logger(), *this->get_clock(), std::chrono::milliseconds(5000).count(),
       "Please publish TF " << target_frame.c_str() << " to " << source_frame.c_str());
 
     transform_stamped_ptr->header.stamp = this->now();

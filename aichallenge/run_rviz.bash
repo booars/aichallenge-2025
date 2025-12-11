@@ -12,12 +12,21 @@ case "${mode}" in
 "vehicle")
     opts=("use_sim_time:=false")
     ;;
+"remote")
+    opts=("use_sim_time:=false")
+    source /aichallenge/workspace/install/setup.bash
+    sudo ip link set multicast on lo
+    sudo sysctl -w net.core.rmem_max=2147483647 >/dev/null
+    ros2 launch aichallenge_system_launch remote.launch.xml "use_sim_time:=false" &
+    ;;
 *)
-    echo "invalid argument (use 'awsim' or 'vehicle')"
+    echo "invalid argument (use 'awsim', 'vehicle', or 'remote')"
     exit 1
     ;;
 esac
 
+source /opt/ros/humble/setup.bash
+source /autoware/install/setup.bash
 source /aichallenge/workspace/install/setup.bash
 sudo ip link set multicast on lo
 sudo sysctl -w net.core.rmem_max=2147483647 >/dev/null

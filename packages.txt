@@ -6,3 +6,5 @@ ros-humble-rqt-tf-tree
 ros-humble-rqt-graph
 terminator
 arp-scan
+ros-humble-rosbag2-storage-mcap
+ros-humble-domain-bridge
